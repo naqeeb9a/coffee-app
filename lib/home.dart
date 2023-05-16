@@ -9,10 +9,11 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  final _pageCoffeeController = PageController(viewportFraction: 0.3);
-  final _pageTextController = PageController();
-  double _currentPage = 0.0;
-  double _currentText = 0.0;
+  final _pageCoffeeController =
+      PageController(viewportFraction: 0.3, initialPage: 3);
+  final _pageTextController = PageController(initialPage: 3);
+  double _currentPage = 3;
+  double _currentText = 3;
   void coffeeScrollListener() {
     setState(() {
       _currentPage = _pageCoffeeController.page!;
@@ -39,10 +40,10 @@ class _HomeState extends State<Home> {
     _pageCoffeeController.removeListener(() {
       coffeeScrollListener();
     });
-    _pageCoffeeController.dispose();
     _pageTextController.removeListener(() {
       coffeeScrollListener();
     });
+    _pageCoffeeController.dispose();
     _pageTextController.dispose();
     super.dispose();
   }
@@ -71,37 +72,46 @@ class _HomeState extends State<Home> {
               top: 0,
               right: 0,
               height: 100,
-              child: Column(
-                children: [
-                  Expanded(
-                    child: PageView.builder(
-                        itemCount: coffees.length,
-                        controller: _pageTextController,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemBuilder: (context, index) {
-                          final opacity = (1 - (index - _currentText).abs())
-                              .clamp(0.0, 1.0);
-                          return Center(
-                            child: Opacity(
-                                opacity: opacity,
-                                child: Text(
-                                  coffees[index].name,
-                                  style: const TextStyle(
-                                      fontSize: 35,
-                                      fontWeight: FontWeight.bold),
-                                )),
-                          );
-                        }),
-                  ),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    key: Key(coffees[_currentPage.toInt()].name),
-                    child: Text(
-                      "\$ ${coffees[_currentPage.toInt()].price.toStringAsFixed(2)}",
-                      style: const TextStyle(fontSize: 20),
+              child: AnimatedCrossFade(
+                firstChild: Column(
+                  children: [
+                    SizedBox(
+                      height: 50,
+                      child: PageView.builder(
+                          itemCount: coffees.length,
+                          controller: _pageTextController,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemBuilder: (context, index) {
+                            final opacity = (1 - (index - _currentText).abs())
+                                .clamp(0.0, 1.0);
+                            return Center(
+                              child: Opacity(
+                                  opacity: opacity,
+                                  child: Text(
+                                    coffees[index].name,
+                                    style: const TextStyle(
+                                        fontSize: 35,
+                                        fontWeight: FontWeight.bold),
+                                  )),
+                            );
+                          }),
                     ),
-                  )
-                ],
+                    if ((_currentPage < coffees.length))
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        key: Key(coffees[_currentPage.toInt()].name),
+                        child: Text(
+                          "\$ ${coffees[_currentPage.toInt()].price.toStringAsFixed(2)}",
+                          style: const TextStyle(fontSize: 20),
+                        ),
+                      )
+                  ],
+                ),
+                secondChild: const Column(),
+                crossFadeState: (_currentPage < coffees.length)
+                    ? CrossFadeState.showFirst
+                    : CrossFadeState.showSecond,
+                duration: const Duration(milliseconds: 650),
               )),
           Transform.scale(
             scale: 1.6,
@@ -109,11 +119,13 @@ class _HomeState extends State<Home> {
             child: PageView.builder(
                 controller: _pageCoffeeController,
                 scrollDirection: Axis.vertical,
-                itemCount: coffees.length,
+                itemCount: (coffees.length) + 1,
                 onPageChanged: (value) {
-                  _pageTextController.animateToPage(value,
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeOut);
+                  if (value < coffees.length) {
+                    _pageTextController.animateToPage(value,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOut);
+                  }
                 },
                 itemBuilder: (context, index) {
                   if (index == 0) {
@@ -123,22 +135,21 @@ class _HomeState extends State<Home> {
                   final result = _currentPage - index + 1;
                   final value = -0.4 * result + 1;
                   final opacity = value.clamp(0.0, 1.0);
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 20),
-                    child: Transform(
-                        alignment: Alignment.bottomCenter,
-                        transform: Matrix4.identity()
-                          ..setEntry(3, 2, 0.001)
-                          ..translate(
-                              0.0, size.height / 2.6 * (1 - value).abs())
-                          ..scale(value),
-                        child: Opacity(
-                            opacity: opacity,
+                  return Transform(
+                      alignment: Alignment.bottomCenter,
+                      transform: Matrix4.identity()
+                        ..setEntry(3, 2, 0.001)
+                        ..translate(0.0, size.height / 2.6 * (1 - value).abs())
+                        ..scale(value),
+                      child: Opacity(
+                          opacity: opacity,
+                          child: Hero(
+                            tag: coffee.name,
                             child: Image.asset(
                               coffee.image,
                               fit: BoxFit.fitHeight,
-                            ))),
-                  );
+                            ),
+                          )));
                 }),
           ),
         ],

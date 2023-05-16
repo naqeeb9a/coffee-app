@@ -8,7 +8,8 @@ final _names = [
   "Mochaccino",
   "Iced coffee",
   "Latte macchiato",
-  "Café au lait"
+  "Café au lait",
+  "White Cold Coffee"
 ];
 
 class Coffee {

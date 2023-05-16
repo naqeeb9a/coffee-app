@@ -1,4 +1,4 @@
-import 'package:coffeeapp/home.dart';
+import 'package:coffeeapp/coffee_home.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: const Home(),
+      home: const CoffeeHome(),
     );
   }
 }
